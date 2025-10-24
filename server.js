@@ -26,10 +26,10 @@ const transporter = nodemailer.createTransport({
 
 app.post('/incident', async (req, res) => {
   try {
-    // DEBUG: log incoming request body to verify phone is received
+    // DEBUG: log incoming request body to verify fields are received
     console.log('POST /incident body:', req.body);
 
-    const { title, description, severity, metadata, phone } = req.body;
+    const { title, description, severity, metadata, phone, websiteType, incidentFrequency, serviceAffected, rootCauseCategory, tags } = req.body;
     if (!title || !description) return res.status(400).json({error: 'title and description required'});
 
     if (phone && !/^\+\d{7,15}$/.test(phone)) {
@@ -47,6 +47,11 @@ app.post('/incident', async (req, res) => {
       status: 'Open',
       metadata: JSON.stringify(metadata || {}),
       phone: phone || null,
+      websiteType: websiteType || null,
+      incidentFrequency: incidentFrequency || null,
+      serviceAffected: serviceAffected || null,
+      rootCauseCategory: rootCauseCategory || null,
+      tags: tags || null,
       created_at: new Date().toISOString()
     };
 
@@ -64,14 +69,13 @@ app.post('/incident', async (req, res) => {
     }
 
     if (phone) {
-  sendSMS({
-    to: phone,
-    body: 'Hey there, your issue has been recorded on our incident management dashboard. We are working on creating a smoother experience for you. Thank you'
-  })
-    .then(r => console.log(`SMS sent to ${phone}`, r && r.sid ? r.sid : ''))
-    .catch(err => console.error('SMS send failed:', err && err.message ? err.message : err));
-}
-
+      sendSMS({
+        to: phone,
+        body: 'Hey there, your issue has been recorded on our incident management dashboard. We are working on creating a smoother experience for you. Thank you'
+      })
+      .then(r => console.log(`SMS sent to ${phone}`, r && r.sid ? r.sid : ''))
+      .catch(err => console.error('SMS send failed:', err && err.message ? err.message : err));
+    }
 
     const saved = await db.getIncidentById(id);
     // DEBUG: log fetched DB row to ensure phone persisted

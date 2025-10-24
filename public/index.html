@@ -11,39 +11,104 @@
     <h1>Basix Incident System</h1>
 
     <form id="incidentForm" class="mb-4">
-      <div class="mb-2">
-        <label class="form-label">Title</label>
-        <input id="title" class="form-control" required />
+      <div class="row mb-2">
+        <div class="col-md-6 mb-2">
+          <label class="form-label">Title</label>
+          <input id="title" class="form-control" required />
+        </div>
+        <div class="col-md-6 mb-2">
+          <label class="form-label">Website Type</label>
+          <input id="websiteType" type="text" class="form-control" placeholder="e.g. Ecommerce, TravelTech" />
+        </div>
       </div>
 
-      <div class="mb-2">
-        <label class="form-label">Description</label>
-        <textarea id="description" class="form-control" rows="3" required></textarea>
+      <div class="row mb-2">
+        <div class="col-md-6 mb-2">
+          <label class="form-label">Description</label>
+          <textarea id="description" class="form-control" rows="3" required></textarea>
+        </div>
+        <div class="col-md-6 mb-2">
+          <label class="form-label">Incident Frequency</label>
+          <select id="incidentFrequency" class="form-select">
+            <option>one-time</option>
+            <option>intermittent</option>
+            <option>continuous</option>
+          </select>
+        </div>
       </div>
 
-      <div class="mb-2">
-        <label class="form-label">Severity</label>
-        <select id="severity" class="form-select">
-          <option>low</option>
-          <option selected>medium</option>
-          <option>high</option>
-          <option>critical</option>
-        </select>
+      <div class="row mb-2">
+        <div class="col-md-6 mb-2">
+          <label class="form-label">Severity</label>
+          <select id="severity" class="form-select">
+            <option>low</option>
+            <option selected>medium</option>
+            <option>high</option>
+            <option>critical</option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-2">
+          <label class="form-label">Root Cause Category</label>
+          <select id="rootCauseCategory" class="form-select">
+            <option>frontend</option>
+            <option>backend</option>
+            <option>database</option>
+            <option>third-party</option>
+            <option>other</option>
+          </select>
+        </div>
       </div>
 
-      <div class="mb-2">
-        <label class="form-label">Phone (E.164, e.g. +15551234567)</label>
-        <input id="phone" type="tel" class="form-control" placeholder="+15551234567"
-               pattern="^\+\d{7,15}$" title="Enter phone in E.164 format, e.g. +15551234567" />
-        <div class="form-text">Optional — include country code. If provided, SMS alerts can be sent.</div>
+      <div class="row mb-2">
+        <div class="col-md-6 mb-2">
+          <label class="form-label">Service Affected</label>
+          <select id="serviceAffected" class="form-select">
+            <option>checkout</option>
+            <option>login</option>
+            <option>API</option>
+            <option>search</option>
+            <option>other</option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-2">
+          <label class="form-label">Phone (E.164, e.g. +15551234567)</label>
+          <input id="phone" type="tel" class="form-control" placeholder="+15551234567"
+                 pattern="^\+\d{7,15}$" title="Enter phone in E.164 format, e.g. +15551234567" />
+          <div class="form-text">Optional — include country code for SMS alerts.</div>
+        </div>
       </div>
 
-      <button class="btn btn-primary">Create Incident</button>
+      <div class="row mb-2">
+        <div class="col-md-12 mb-2">
+          <label class="form-label">Optional Tags (comma separated)</label>
+          <input id="tags" type="text" class="form-control" placeholder="e.g. urgent, payment, bug" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <button class="btn btn-primary w-100">Create Incident</button>
+        </div>
+      </div>
     </form>
 
     <h3>Incidents</h3>
     <table class="table" id="incTable">
-      <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Priority</th><th>Status</th><th>Phone</th></tr></thead>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Category</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Phone</th>
+          <th>Website Type</th>
+          <th>Incident Frequency</th>
+          <th>Service Affected</th>
+          <th>Root Cause Category</th>
+          <th>Tags</th>
+        </tr>
+      </thead>
       <tbody></tbody>
     </table>
   </div>
@@ -58,9 +123,20 @@ async function fetchIncidents() {
     tbody.innerHTML = '';
     for (const inc of list) {
       const phoneCell = inc.phone || '';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${inc.id}</td><td>${escapeHtml(inc.title)}</td><td>${escapeHtml(inc.category)}</td><td>${escapeHtml(inc.priority)}</td><td>${escapeHtml(inc.status)}</td><td>${escapeHtml(phoneCell)}</td>`;
-      tbody.appendChild(tr);
+      const tags = inc.tags || '';
+      tbody.innerHTML += `<tr>
+        <td>${inc.id}</td>
+        <td>${escapeHtml(inc.title)}</td>
+        <td>${escapeHtml(inc.category)}</td>
+        <td>${escapeHtml(inc.priority)}</td>
+        <td>${escapeHtml(inc.status)}</td>
+        <td>${escapeHtml(phoneCell)}</td>
+        <td>${escapeHtml(inc.websiteType || '')}</td>
+        <td>${escapeHtml(inc.incidentFrequency || '')}</td>
+        <td>${escapeHtml(inc.serviceAffected || '')}</td>
+        <td>${escapeHtml(inc.rootCauseCategory || '')}</td>
+        <td>${escapeHtml(tags)}</td>
+      </tr>`;
     }
   } catch (err) {
     console.error(err);
@@ -78,6 +154,11 @@ document.getElementById('incidentForm').addEventListener('submit', async e=>{
   const description = document.getElementById('description').value.trim();
   const severity = document.getElementById('severity').value;
   const phone = document.getElementById('phone').value.trim();
+  const websiteType = document.getElementById('websiteType').value.trim();
+  const incidentFrequency = document.getElementById('incidentFrequency').value;
+  const serviceAffected = document.getElementById('serviceAffected').value;
+  const rootCauseCategory = document.getElementById('rootCauseCategory').value;
+  const tags = document.getElementById('tags').value.trim();
 
   if (!title || !description) {
     alert('Title and description are required.');
@@ -89,8 +170,17 @@ document.getElementById('incidentForm').addEventListener('submit', async e=>{
     return;
   }
 
-  // Send phone explicitly as null when blank so the server sees the key.
-  const payload = { title, description, severity, phone: phone || null };
+  const payload = {
+    title,
+    description,
+    severity,
+    phone: phone || null,
+    websiteType: websiteType || null,
+    incidentFrequency,
+    serviceAffected,
+    rootCauseCategory,
+    tags: tags || null
+  };
 
   try {
     const res = await fetch('/incident', {
@@ -107,6 +197,12 @@ document.getElementById('incidentForm').addEventListener('submit', async e=>{
   document.getElementById('title').value = '';
   document.getElementById('description').value = '';
   document.getElementById('phone').value = '';
+  document.getElementById('websiteType').value = '';
+  document.getElementById('incidentFrequency').value = 'one-time';
+  document.getElementById('serviceAffected').value = 'checkout';
+  document.getElementById('rootCauseCategory').value = 'frontend';
+  document.getElementById('tags').value = '';
+
   fetchIncidents();
 });
 

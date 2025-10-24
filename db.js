@@ -20,29 +20,62 @@ module.exports.init = function() {
         status TEXT,
         metadata TEXT,
         phone TEXT,
+        websiteType TEXT,
+        incidentFrequency TEXT,
+        serviceAffected TEXT,
+        rootCauseCategory TEXT,
+        tags TEXT,
         created_at TEXT
       )`, (err) => {
         if (err) {
           db.close();
           return reject(err);
         }
-        // ensure phone column exists on older DBs
+        // Add missing columns on older DBs to avoid breaking changes
         db.all("PRAGMA table_info(incidents)", (err, rows) => {
           if (err) {
             db.close();
             return reject(err);
           }
-          const hasPhone = Array.isArray(rows) && rows.some(r => r && r.name === 'phone');
-          if (!hasPhone) {
-            db.run("ALTER TABLE incidents ADD COLUMN phone TEXT", (err) => {
-              db.close();
-              if (err) return reject(err);
-              resolve();
-            });
-          } else {
+          const columns = rows.map(r => r.name);
+          const promises = [];
+          if (!columns.includes('phone')) {
+            promises.push(new Promise((res, rej) => {
+              db.run("ALTER TABLE incidents ADD COLUMN phone TEXT", (err) => err ? rej(err) : res());
+            }));
+          }
+          if (!columns.includes('websiteType')) {
+            promises.push(new Promise((res, rej) => {
+              db.run("ALTER TABLE incidents ADD COLUMN websiteType TEXT", (err) => err ? rej(err) : res());
+            }));
+          }
+          if (!columns.includes('incidentFrequency')) {
+            promises.push(new Promise((res, rej) => {
+              db.run("ALTER TABLE incidents ADD COLUMN incidentFrequency TEXT", (err) => err ? rej(err) : res());
+            }));
+          }
+          if (!columns.includes('serviceAffected')) {
+            promises.push(new Promise((res, rej) => {
+              db.run("ALTER TABLE incidents ADD COLUMN serviceAffected TEXT", (err) => err ? rej(err) : res());
+            }));
+          }
+          if (!columns.includes('rootCauseCategory')) {
+            promises.push(new Promise((res, rej) => {
+              db.run("ALTER TABLE incidents ADD COLUMN rootCauseCategory TEXT", (err) => err ? rej(err) : res());
+            }));
+          }
+          if (!columns.includes('tags')) {
+            promises.push(new Promise((res, rej) => {
+              db.run("ALTER TABLE incidents ADD COLUMN tags TEXT", (err) => err ? rej(err) : res());
+            }));
+          }
+          Promise.all(promises).then(() => {
             db.close();
             resolve();
-          }
+          }).catch(e => {
+            db.close();
+            reject(e);
+          });
         });
       });
     });
@@ -53,7 +86,6 @@ module.exports.createIncident = function(incident) {
   return new Promise((resolve, reject) => {
     const db = openDB();
 
-    // Defensive defaults to avoid inserting undefined into DB and to always have a created_at
     const title = incident.title || null;
     const description = incident.description || null;
     const severity = incident.severity || null;
@@ -61,12 +93,17 @@ module.exports.createIncident = function(incident) {
     const priority = incident.priority || null;
     const status = incident.status || null;
     const metadata = incident.metadata || null;
-    const phone = (incident.phone === undefined) ? null : incident.phone; // explicit null if missing
+    const phone = (incident.phone === undefined) ? null : incident.phone;
+    const websiteType = incident.websiteType || null;
+    const incidentFrequency = incident.incidentFrequency || null;
+    const serviceAffected = incident.serviceAffected || null;
+    const rootCauseCategory = incident.rootCauseCategory || null;
+    const tags = incident.tags || null;
     const created_at = incident.created_at || new Date().toISOString();
 
     const stmt = db.prepare(`INSERT INTO incidents
-      (title,description,severity,category,priority,status,metadata,phone,created_at)
-      VALUES (?,?,?,?,?,?,?,?,?)`);
+      (title,description,severity,category,priority,status,metadata,phone,websiteType,incidentFrequency,serviceAffected,rootCauseCategory,tags,created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
     stmt.run([
       title,
       description,
@@ -76,6 +113,11 @@ module.exports.createIncident = function(incident) {
       status,
       metadata,
       phone,
+      websiteType,
+      incidentFrequency,
+      serviceAffected,
+      rootCauseCategory,
+      tags,
       created_at
     ], function(err) {
       stmt.finalize();
@@ -119,9 +161,10 @@ module.exports.updateStatus = function(id, status) {
   });
 };
 
+// CLI init option
 if (require.main === module) {
   const arg = process.argv[2];
   if (arg === '--init') {
-    module.exports.init().then(()=>console.log('DB init done')).catch(e=>console.error(e));
+    module.exports.init().then(() => console.log('DB init done')).catch(e => console.error(e));
   }
 }
