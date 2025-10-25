@@ -1,0 +1,6 @@
+conclusion_number,antecedents,consequents,confidence,support,lift
+1,Tag:deployment,Tag:rollback,100.0%,5.5%,18.18x
+2,Tag:rollback,Tag:deployment,100.0%,5.5%,18.18x
+3,Tag:outage,Tag:partial,100.0%,5.5%,18.18x
+4,Tag:partial,Tag:outage,100.0%,5.5%,18.18x
+5,Tag:degraded,Tag:service,100.0%,6.3%,15.91x

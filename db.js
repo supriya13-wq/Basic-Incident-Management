@@ -2,9 +2,11 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const dbFile = path.join(__dirname, 'incidents.db');
 
+
 function openDB() {
   return new sqlite3.Database(dbFile);
 }
+
 
 module.exports.init = function() {
   return new Promise((resolve, reject) => {
@@ -82,9 +84,11 @@ module.exports.init = function() {
   });
 };
 
+
 module.exports.createIncident = function(incident) {
   return new Promise((resolve, reject) => {
     const db = openDB();
+
 
     const title = incident.title || null;
     const description = incident.description || null;
@@ -100,6 +104,7 @@ module.exports.createIncident = function(incident) {
     const rootCauseCategory = incident.rootCauseCategory || null;
     const tags = incident.tags || null;
     const created_at = incident.created_at || new Date().toISOString();
+
 
     const stmt = db.prepare(`INSERT INTO incidents
       (title,description,severity,category,priority,status,metadata,phone,websiteType,incidentFrequency,serviceAffected,rootCauseCategory,tags,created_at)
@@ -128,16 +133,18 @@ module.exports.createIncident = function(incident) {
   });
 };
 
+
 module.exports.listIncidents = function() {
   return new Promise((resolve, reject) => {
     const db = openDB();
-    db.all('SELECT * FROM incidents ORDER BY created_at DESC', (err, rows) => {
+    db.all('SELECT * FROM incidents ORDER BY id ASC', (err, rows) => {
       db.close();
       if (err) return reject(err);
       resolve(rows);
     });
   });
 };
+
 
 module.exports.getIncidentById = function(id) {
   return new Promise((resolve, reject) => {
@@ -150,6 +157,7 @@ module.exports.getIncidentById = function(id) {
   });
 };
 
+
 module.exports.updateStatus = function(id, status) {
   return new Promise((resolve, reject) => {
     const db = openDB();
@@ -160,6 +168,7 @@ module.exports.updateStatus = function(id, status) {
     });
   });
 };
+
 
 // CLI init option
 if (require.main === module) {
